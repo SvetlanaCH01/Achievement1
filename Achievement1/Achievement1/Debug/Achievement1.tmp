@@ -1,0 +1,36 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.2.8</VERSION>
+ <DEVICE>"ATmega8"</DEVICE>
+ <WORKING_DIR>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\Debug</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc</DIR>
+  <DIR>C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avrassembler\Include</DIR>
+  <DIR></DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m8def.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\Debug\Achievement1.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>Achievement1.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>Achievement1.map</FILE>
+  <FILE>Achievement1.lss</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <RESET_PROGRAM><FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</FILE><LINE>39</LINE></RESET_PROGRAM>
+  <ISR_TIMER2><FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</FILE><LINE>121</LINE></ISR_TIMER2>
+  <ISR_TIMER1><FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</FILE><LINE>104</LINE></ISR_TIMER1>
+  <main_loop><FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</FILE><LINE>77</LINE></main_loop>
+  <send_single_char><FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</FILE><LINE>81</LINE></send_single_char>
+  <send_text_string><FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</FILE><LINE>87</LINE></send_text_string>
+  <next_character><FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</FILE><LINE>88</LINE></next_character>
+  <end_string><FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</FILE><LINE>94</LINE></end_string>
+  <msg_ping><FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</FILE><LINE>97</LINE></msg_ping>
+  <msg_pong><FILE>C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm</FILE><LINE>100</LINE></msg_pong>
+ </LABELS>
+</ASSEMBLER_INFO>
