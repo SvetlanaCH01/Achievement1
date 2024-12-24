@@ -1,10 +1,10 @@
 
-AVRASM ver. 2.2.8  C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm Mon Dec 23 23:03:16 2024
+AVRASM ver. 2.2.8  C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm Tue Dec 24 22:33:04 2024
 
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m8def.inc'
-C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm(15): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m8def.inc'
+C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm(10): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m8def.inc'
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m8def.inc'
-C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm(15): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m8def.inc'
+C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm(10): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m8def.inc'
                                  
                                  ;
                                  
@@ -754,12 +754,7 @@ C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\mai
                                  
                                  
                                  ; Replace with your application code
-                                 ; Проект для ATmega8
-                                 ;======================================
-                                 ; Пример (Assembler для Atmega8)
-                                 ; С разделёнными векторами прерываний
-                                 ; =====================================
-                                 .include "m8def.inc"   ; Подключаем определения для ATmega8
+                                 .include "m8def.inc"   ; Подключаем определения для ATmega8, включая порты, регистры и другие константы
                                  
                                  ;***** Created: 2011-02-09 12:03 ******* Source: ATmega8.xml *************
                                  ;*************************************************************************
@@ -803,136 +798,144 @@ C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\mai
                                  #endif  /* _M8DEF_INC_ */
                                  
                                  ; ***** END OF FILE ******************************************************
-                                 
-                                 .def  reg_temp   = r16
+                                 .def  reg_temp   = r16 ; Определяем регистр reg_temp как r16, который будем использовать временно
                                  
                                  ;--------------------------------------
                                  ; Константы
-                                 .equ FREQ_CPU      = 1000000      ; Частота (1 MHz)
-                                 .equ BAUD_RATE     = 9600
-                                 .equ UBRR_VAL      = (FREQ_CPU/(16*BAUD_RATE))-1
+                                 .equ FREQ_CPU      = 1000000      ; Частота микроконтроллера 1 MHz
+                                 .equ BAUD_RATE     = 9600         ; Устанавливаем скорость передачи данных для USART на 9600
+                                 .equ UBRR_VAL      = (FREQ_CPU/(16*BAUD_RATE))-1  ; Расчёт значения для регистра UBRR, необходим для настройки USART
                                  
-                                 .equ TIMER1_TOP    = 488
-                                 .equ TIMER2_TOP    = 244
+                                 .equ TIMER1_TOP    = 488           ; Устанавливаем значение для TOP таймера 1
+                                 .equ TIMER2_TOP    = 244           ; Устанавливаем значение для TOP таймера 2
                                  
                                  .cseg
+                                 .org 0x0000          ; Указываем начало программы, начальный адрес (0x0000)
+000000 c006                          rjmp RESET_PROGRAM ; Переходим к начальной точке программы (RESET_PROGRAM)
                                  
-                                 .org 0x0000
-000000 c006                          rjmp RESET_PROGRAM
+                                 .org OC2addr         ; Адрес прерывания для таймера 2
+000003 c044                          rjmp ISR_TIMER2  ; Переходим к обработчику прерывания для таймера 2
                                  
-                                 .org OC2addr
-000003 c044                          rjmp ISR_TIMER2
+                                 .org OC1Aaddr        ; Адрес прерывания для таймера 1
+000006 c033                          rjmp ISR_TIMER1  ; Переходим к обработчику прерывания для таймера 1
                                  
-                                 .org OC1Aaddr
-000006 c033                          rjmp ISR_TIMER1
-                                 
+                                 ; Начальная инициализация
                                  RESET_PROGRAM:
-000007 e000                          ldi reg_temp, 0x00
-000008 bb07                          out DDRB, reg_temp
-000009 bb04                          out DDRC, reg_temp
-00000a bb01                          out DDRD, reg_temp
+000007 e000                          ldi reg_temp, 0x00  ; Загружаем в reg_temp значение 0 (нулевые биты)
+000008 bb07                          out DDRB, reg_temp  ; Устанавливаем все биты порта B как выходы (DDRB = 0)
+000009 bb04                          out DDRC, reg_temp  ; Устанавливаем все биты порта C как выходы (DDRC = 0)
+00000a bb01                          out DDRD, reg_temp  ; Устанавливаем все биты порта D как выходы (DDRD = 0)
                                  
-00000b e005                          ldi reg_temp, UBRR_VAL
-00000c b909                          out UBRRL, reg_temp
-00000d e000                          ldi reg_temp, 0
-00000e bd00                          out UBRRH, reg_temp
-00000f e108                          ldi reg_temp, (1<<RXEN)|(1<<TXEN)
-000010 b90a                          out UCSRB, reg_temp
-000011 e806                          ldi reg_temp, (1<<URSEL)|(3<<UCSZ0)
-000012 bd00                          out UCSRC, reg_temp
+00000b e005                          ldi reg_temp, UBRR_VAL  ; Загружаем предварительно рассчитанное значение для регистра UBRR (настройка USART)
+00000c b909                          out UBRRL, reg_temp     ; Записываем младшие биты в регистр UBRRL
+00000d e000                          ldi reg_temp, 0         ; Загружаем 0 для старших бит в регистр UBRRH
+00000e bd00                          out UBRRH, reg_temp    ; Записываем в регистр UBRRH
                                  
-000013 e001                          ldi reg_temp, high(TIMER1_TOP)
-000014 bd0b                          out OCR1AH, reg_temp
-000015 ee08                          ldi reg_temp, low(TIMER1_TOP)
-000016 bd0a                          out OCR1AL, reg_temp
+00000f e108                          ldi reg_temp, (1<<RXEN)|(1<<TXEN)  ; Включаем прием и передачу данных через USART (RXEN - приёмник, TXEN - передатчик)
+000010 b90a                          out UCSRB, reg_temp      ; Записываем в регистр управления USART (UCSRB)
                                  
-000017 e008                          ldi reg_temp, (1<<WGM12)
-000018 bd0e                          out TCCR1B, reg_temp
-000019 e005                          ldi reg_temp, (1<<CS12)|(1<<CS10)
-00001a bd0e                          out TCCR1B, reg_temp
+000011 e806                          ldi reg_temp, (1<<URSEL)|(3<<UCSZ0)  ; Настройка формата кадра: 8 бит данных (UCSZ0)
+000012 bd00                          out UCSRC, reg_temp      ; Записываем в регистр управления USART (UCSRC)
                                  
-00001b e100                          ldi reg_temp, (1<<OCIE1A)
-00001c bf09                          out TIMSK, reg_temp
+                                     ; Настройка таймера 1
+000013 e001                          ldi reg_temp, high(TIMER1_TOP)  ; Загружаем старшие 8 бит значения TIMER1_TOP
+000014 bd0b                          out OCR1AH, reg_temp           ; Записываем в старший байт регистра OCR1A (верхнее значение таймера 1)
+000015 ee08                          ldi reg_temp, low(TIMER1_TOP)  ; Загружаем младшие 8 бит значения TIMER1_TOP
+000016 bd0a                          out OCR1AL, reg_temp           ; Записываем в младший байт регистра OCR1A (низшее значение таймера 1)
                                  
-00001d ef04                          ldi reg_temp, TIMER2_TOP
-00001e bd03                          out OCR2, reg_temp
-00001f e00f                          ldi reg_temp, (1<<WGM21)|(1<<CS22)|(1<<CS21)|(1<<CS20)
-000020 bd05                          out TCCR2, reg_temp
-000021 b709                          in reg_temp, TIMSK
-000022 6800                          ori reg_temp, (1<<OCIE2)
-000023 bf09                          out TIMSK, reg_temp
+000017 e008                          ldi reg_temp, (1<<WGM12)  ; Включаем режим CTC (Clear Timer on Compare Match) для таймера 1
+000018 bd0e                          out TCCR1B, reg_temp      ; Записываем в регистр управления таймером 1 (TCCR1B)
+000019 e005                          ldi reg_temp, (1<<CS12)|(1<<CS10)  ; Устанавливаем предделитель на 1024
+00001a bd0e                          out TCCR1B, reg_temp      ; Записываем в регистр управления таймером 1
                                  
-000024 9478                          sei
+00001b e100                          ldi reg_temp, (1<<OCIE1A)  ; Включаем прерывание по сравнению для таймера 1
+00001c bf09                          out TIMSK, reg_temp       ; Записываем в регистр маски прерываний (TIMSK)
+                                 
+                                     ; Настройка таймера 2
+00001d ef04                          ldi reg_temp, TIMER2_TOP  ; Загружаем значение для TOP таймера 2
+00001e bd03                          out OCR2, reg_temp        ; Записываем значение в регистр OCR2
+                                 
+00001f e00f                          ldi reg_temp, (1<<WGM21)|(1<<CS22)|(1<<CS21)|(1<<CS20)  ; Настроим таймер 2 на CTC с предделителем 1024
+000020 bd05                          out TCCR2, reg_temp       ; Записываем в регистр управления таймером 2
+                                 
+                                     ; Включение прерывания для таймера 2
+000021 b709                          in reg_temp, TIMSK        ; Считываем текущие настройки прерываний
+000022 6800                          ori reg_temp, (1<<OCIE2)  ; Устанавливаем бит для прерывания по сравнению для таймера 2
+000023 bf09                          out TIMSK, reg_temp       ; Записываем обновлённые настройки в TIMSK
+                                 
+000024 9478                          sei  ; Включаем глобальные прерывания
                                  
                                  main_loop:
+000025 cfff                          rjmp main_loop  ; Переходим в бесконечный цикл (зависает здесь, если нет прерываний)
                                  
-000025 cfff                          rjmp main_loop
-                                 
+                                 ; Отправка одного символа через USART
                                  send_single_char:
-000026 9b5d                          sbis UCSRA, UDRE
-000027 cffe                          rjmp send_single_char
-000028 b98c                          out UDR, r24            
-000029 9508                          ret
+000026 9b5d                          sbis UCSRA, UDRE  ; Проверяем, готов ли буфер передачи (UDRE = 1)
+000027 cffe                          rjmp send_single_char  ; Если нет, ждём
+000028 b98c                          out UDR, r24         ; Отправляем символ из регистра r24 в USART
+000029 9508                          ret  ; Возвращаемся из функции
                                  
+                                 ; Отправка строки через USART
                                  send_text_string:
                                  next_character:
-00002a 9185                          lpm r24, Z+
-00002b 2388                          tst r24
-00002c f011                          breq end_string
-00002d dff8                          rcall send_single_char
-00002e cffb                          rjmp next_character
+00002a 9185                          lpm r24, Z+         ; Загружаем следующий символ из строки в r24
+00002b 2388                          tst r24             ; Проверяем, не конец ли строки (NULL символ)
+00002c f011                          breq end_string     ; Если да, переходим к завершению
+00002d dff8                          rcall send_single_char  ; Иначе отправляем символ
+00002e cffb                          rjmp next_character  ; Переходим к следующему символу
                                  end_string:
-00002f 9508                          ret
+00002f 9508                          ret  ; Завершаем отправку строки
                                  
+                                 ; Сообщения
                                  msg_ping:
 000030 6970
 000031 676e
 000032 725c
 000033 6e5c
-C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm(98): warning: .cseg .db misalignment - padding zero byte
-000034 0000                          .db "ping\r\n", 0
+C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm(101): warning: .cseg .db misalignment - padding zero byte
+000034 0000                          .db "ping\r\n", 0  ; Строка "ping" с символом новой строки
                                  
                                  msg_pong:
 000035 6f70
 000036 676e
 000037 725c
 000038 6e5c
-C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm(101): warning: .cseg .db misalignment - padding zero byte
-000039 0000                          .db "pong\r\n", 0
+C:\Users\s_chi\OneDrive\Документы\Atmel Studio\7.0\Achievement1\Achievement1\main.asm(104): warning: .cseg .db misalignment - padding zero byte
+000039 0000                          .db "pong\r\n", 0  ; Строка "pong" с символом новой строки
                                  
-                                 
+                                 ; Обработчик прерывания для таймера 1
                                  ISR_TIMER1:
-00003a 938f                          push r24
-00003b 939f                          push r25
-00003c 93ff                          push ZH
-00003d 93ef                          push ZL
-00003e e080                          ldi r24, high(msg_ping*2)
-00003f e690                          ldi r25, low(msg_ping*2)
-000040 2ff8                          mov ZH, r24
-000041 2fe9                          mov ZL, r25
-000042 dfe7                          rcall send_text_string
-000043 91ef                          pop ZL
-000044 91ff                          pop ZH
-000045 919f                          pop r25
-000046 918f                          pop r24
-000047 9518                          reti
+00003a 938f                          push r24             ; Сохраняем состояние регистра r24
+00003b 939f                          push r25             ; Сохраняем состояние регистра r25
+00003c 93ff                          push ZH              ; Сохраняем состояние старшего байта регистра Z
+00003d 93ef                          push ZL              ; Сохраняем состояние младшего байта регистра Z
+00003e e080                          ldi r24, high(msg_ping*2)  ; Загружаем старший байт адреса строки msg_ping
+00003f e690                          ldi r25, low(msg_ping*2)   ; Загружаем младший байт адреса строки msg_ping
+000040 2ff8                          mov ZH, r24          ; Переносим старший байт адреса в регистр ZH
+000041 2fe9                          mov ZL, r25          ; Переносим младший байт адреса в регистр ZL
+000042 dfe7                          rcall send_text_string  ; Вызываем функцию для отправки строки
+000043 91ef                          pop ZL               ; Восстанавливаем старший байт регистра Z
+000044 91ff                          pop ZH               ; Восстанавливаем младший байт регистра Z
+000045 919f                          pop r25              ; Восстанавливаем регистр r25
+000046 918f                          pop r24              ; Восстанавливаем регистр r24
+000047 9518                          reti                 ; Возвращаемся из прерывания
                                  
-                                 
+                                 ; Обработчик прерывания для таймера 2
                                  ISR_TIMER2:
-000048 938f                          push r24
-000049 939f                          push r25
-00004a 93ff                          push ZH
-00004b 93ef                          push ZL
-00004c e080                          ldi r24, high(msg_pong*2)
-00004d e69a                          ldi r25, low(msg_pong*2)
-00004e 2ff8                          mov ZH, r24
-00004f 2fe9                          mov ZL, r25
-000050 dfd9                          rcall send_text_string
-000051 91ef                          pop ZL
-000052 91ff                          pop ZH
-000053 919f                          pop r25
-000054 918f                          pop r24
-000055 9518                          reti
+000048 938f                          push r24             ; Сохраняем состояние регистра r24
+000049 939f                          push r25             ; Сохраняем состояние регистра r25
+00004a 93ff                          push ZH              ; Сохраняем состояние старшего байта регистра Z
+00004b 93ef                          push ZL              ; Сохраняем состояние младшего байта регистра Z
+00004c e080                          ldi r24, high(msg_pong*2)  ; Загружаем старший байт адреса строки msg_pong
+00004d e69a                          ldi r25, low(msg_pong*2)   ; Загружаем младший байт адреса строки msg_pong
+00004e 2ff8                          mov ZH, r24          ; Переносим старший байт адреса в регистр ZH
+00004f 2fe9                          mov ZL, r25          ; Переносим младший байт адреса в регистр ZL
+000050 dfd9                          rcall send_text_string  ; Вызываем функцию для отправки строки
+000051 91ef                          pop ZL               ; Восстанавливаем старший байт регистра Z
+000052 91ff                          pop ZH               ; Восстанавливаем младший байт регистра Z
+000053 919f                          pop r25              ; Восстанавливаем регистр r25
+000054 918f                          pop r24              ; Восстанавливаем регистр r24
+000055 9518                          reti                 ; Возвращаемся из прерывания
 
 
 RESOURCE USE INFORMATION

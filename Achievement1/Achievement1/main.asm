@@ -7,129 +7,132 @@
 
 
 ; Replace with your application code
-; Проект для ATmega8
-;======================================
-; Пример (Assembler для Atmega8)
-; С разделёнными векторами прерываний
-; =====================================
-.include "m8def.inc"   ; Подключаем определения для ATmega8
-
-.def  reg_temp   = r16
+.include "m8def.inc"   ; Подключаем определения для ATmega8, включая порты, регистры и другие константы
+.def  reg_temp   = r16 ; Определяем регистр reg_temp как r16, который будем использовать временно
 
 ;--------------------------------------
 ; Константы
-.equ FREQ_CPU      = 1000000      ; Частота (1 MHz)
-.equ BAUD_RATE     = 9600
-.equ UBRR_VAL      = (FREQ_CPU/(16*BAUD_RATE))-1
+.equ FREQ_CPU      = 1000000      ; Частота микроконтроллера 1 MHz
+.equ BAUD_RATE     = 9600         ; Устанавливаем скорость передачи данных для USART на 9600
+.equ UBRR_VAL      = (FREQ_CPU/(16*BAUD_RATE))-1  ; Расчёт значения для регистра UBRR, необходим для настройки USART
 
-.equ TIMER1_TOP    = 488
-.equ TIMER2_TOP    = 244
+.equ TIMER1_TOP    = 488           ; Устанавливаем значение для TOP таймера 1
+.equ TIMER2_TOP    = 244           ; Устанавливаем значение для TOP таймера 2
 
 .cseg
+.org 0x0000          ; Указываем начало программы, начальный адрес (0x0000)
+    rjmp RESET_PROGRAM ; Переходим к начальной точке программы (RESET_PROGRAM)
 
-.org 0x0000
-    rjmp RESET_PROGRAM
+.org OC2addr         ; Адрес прерывания для таймера 2
+    rjmp ISR_TIMER2  ; Переходим к обработчику прерывания для таймера 2
 
-.org OC2addr
-    rjmp ISR_TIMER2
+.org OC1Aaddr        ; Адрес прерывания для таймера 1
+    rjmp ISR_TIMER1  ; Переходим к обработчику прерывания для таймера 1
 
-.org OC1Aaddr
-    rjmp ISR_TIMER1
-
+; Начальная инициализация
 RESET_PROGRAM:
-    ldi reg_temp, 0x00
-    out DDRB, reg_temp
-    out DDRC, reg_temp
-    out DDRD, reg_temp
+    ldi reg_temp, 0x00  ; Загружаем в reg_temp значение 0 (нулевые биты)
+    out DDRB, reg_temp  ; Устанавливаем все биты порта B как выходы (DDRB = 0)
+    out DDRC, reg_temp  ; Устанавливаем все биты порта C как выходы (DDRC = 0)
+    out DDRD, reg_temp  ; Устанавливаем все биты порта D как выходы (DDRD = 0)
 
-    ldi reg_temp, UBRR_VAL
-    out UBRRL, reg_temp
-    ldi reg_temp, 0
-    out UBRRH, reg_temp
-    ldi reg_temp, (1<<RXEN)|(1<<TXEN)
-    out UCSRB, reg_temp
-    ldi reg_temp, (1<<URSEL)|(3<<UCSZ0)
-    out UCSRC, reg_temp
+    ldi reg_temp, UBRR_VAL  ; Загружаем предварительно рассчитанное значение для регистра UBRR (настройка USART)
+    out UBRRL, reg_temp     ; Записываем младшие биты в регистр UBRRL
+    ldi reg_temp, 0         ; Загружаем 0 для старших бит в регистр UBRRH
+    out UBRRH, reg_temp    ; Записываем в регистр UBRRH
 
-    ldi reg_temp, high(TIMER1_TOP)
-    out OCR1AH, reg_temp
-    ldi reg_temp, low(TIMER1_TOP)
-    out OCR1AL, reg_temp
+    ldi reg_temp, (1<<RXEN)|(1<<TXEN)  ; Включаем прием и передачу данных через USART (RXEN - приёмник, TXEN - передатчик)
+    out UCSRB, reg_temp      ; Записываем в регистр управления USART (UCSRB)
 
-    ldi reg_temp, (1<<WGM12)
-    out TCCR1B, reg_temp
-    ldi reg_temp, (1<<CS12)|(1<<CS10)
-    out TCCR1B, reg_temp
+    ldi reg_temp, (1<<URSEL)|(3<<UCSZ0)  ; Настройка формата кадра: 8 бит данных (UCSZ0)
+    out UCSRC, reg_temp      ; Записываем в регистр управления USART (UCSRC)
 
-    ldi reg_temp, (1<<OCIE1A)
-    out TIMSK, reg_temp
+    ; Настройка таймера 1
+    ldi reg_temp, high(TIMER1_TOP)  ; Загружаем старшие 8 бит значения TIMER1_TOP
+    out OCR1AH, reg_temp           ; Записываем в старший байт регистра OCR1A (верхнее значение таймера 1)
+    ldi reg_temp, low(TIMER1_TOP)  ; Загружаем младшие 8 бит значения TIMER1_TOP
+    out OCR1AL, reg_temp           ; Записываем в младший байт регистра OCR1A (низшее значение таймера 1)
 
-    ldi reg_temp, TIMER2_TOP
-    out OCR2, reg_temp
-    ldi reg_temp, (1<<WGM21)|(1<<CS22)|(1<<CS21)|(1<<CS20)
-    out TCCR2, reg_temp
-    in reg_temp, TIMSK
-    ori reg_temp, (1<<OCIE2)
-    out TIMSK, reg_temp
+    ldi reg_temp, (1<<WGM12)  ; Включаем режим CTC (Clear Timer on Compare Match) для таймера 1
+    out TCCR1B, reg_temp      ; Записываем в регистр управления таймером 1 (TCCR1B)
+    ldi reg_temp, (1<<CS12)|(1<<CS10)  ; Устанавливаем предделитель на 1024
+    out TCCR1B, reg_temp      ; Записываем в регистр управления таймером 1
 
-    sei
+    ldi reg_temp, (1<<OCIE1A)  ; Включаем прерывание по сравнению для таймера 1
+    out TIMSK, reg_temp       ; Записываем в регистр маски прерываний (TIMSK)
+
+    ; Настройка таймера 2
+    ldi reg_temp, TIMER2_TOP  ; Загружаем значение для TOP таймера 2
+    out OCR2, reg_temp        ; Записываем значение в регистр OCR2
+
+    ldi reg_temp, (1<<WGM21)|(1<<CS22)|(1<<CS21)|(1<<CS20)  ; Настроим таймер 2 на CTC с предделителем 1024
+    out TCCR2, reg_temp       ; Записываем в регистр управления таймером 2
+
+    ; Включение прерывания для таймера 2
+    in reg_temp, TIMSK        ; Считываем текущие настройки прерываний
+    ori reg_temp, (1<<OCIE2)  ; Устанавливаем бит для прерывания по сравнению для таймера 2
+    out TIMSK, reg_temp       ; Записываем обновлённые настройки в TIMSK
+
+    sei  ; Включаем глобальные прерывания
 
 main_loop:
+    rjmp main_loop  ; Переходим в бесконечный цикл (зависает здесь, если нет прерываний)
 
-    rjmp main_loop
-
+; Отправка одного символа через USART
 send_single_char:
-    sbis UCSRA, UDRE
-    rjmp send_single_char
-    out UDR, r24            
-    ret
+    sbis UCSRA, UDRE  ; Проверяем, готов ли буфер передачи (UDRE = 1)
+    rjmp send_single_char  ; Если нет, ждём
+    out UDR, r24         ; Отправляем символ из регистра r24 в USART
+    ret  ; Возвращаемся из функции
 
+; Отправка строки через USART
 send_text_string:
 next_character:
-    lpm r24, Z+
-    tst r24
-    breq end_string
-    rcall send_single_char
-    rjmp next_character
+    lpm r24, Z+         ; Загружаем следующий символ из строки в r24
+    tst r24             ; Проверяем, не конец ли строки (NULL символ)
+    breq end_string     ; Если да, переходим к завершению
+    rcall send_single_char  ; Иначе отправляем символ
+    rjmp next_character  ; Переходим к следующему символу
 end_string:
-    ret
+    ret  ; Завершаем отправку строки
 
+; Сообщения
 msg_ping:
-    .db "ping\r\n", 0
+    .db "ping\r\n", 0  ; Строка "ping" с символом новой строки
 
 msg_pong:
-    .db "pong\r\n", 0
+    .db "pong\r\n", 0  ; Строка "pong" с символом новой строки
 
-
+; Обработчик прерывания для таймера 1
 ISR_TIMER1:
-    push r24
-    push r25
-    push ZH
-    push ZL
-    ldi r24, high(msg_ping*2)
-    ldi r25, low(msg_ping*2)
-    mov ZH, r24
-    mov ZL, r25
-    rcall send_text_string
-    pop ZL
-    pop ZH
-    pop r25
-    pop r24
-    reti
+    push r24             ; Сохраняем состояние регистра r24
+    push r25             ; Сохраняем состояние регистра r25
+    push ZH              ; Сохраняем состояние старшего байта регистра Z
+    push ZL              ; Сохраняем состояние младшего байта регистра Z
+    ldi r24, high(msg_ping*2)  ; Загружаем старший байт адреса строки msg_ping
+    ldi r25, low(msg_ping*2)   ; Загружаем младший байт адреса строки msg_ping
+    mov ZH, r24          ; Переносим старший байт адреса в регистр ZH
+    mov ZL, r25          ; Переносим младший байт адреса в регистр ZL
+    rcall send_text_string  ; Вызываем функцию для отправки строки
+    pop ZL               ; Восстанавливаем старший байт регистра Z
+    pop ZH               ; Восстанавливаем младший байт регистра Z
+    pop r25              ; Восстанавливаем регистр r25
+    pop r24              ; Восстанавливаем регистр r24
+    reti                 ; Возвращаемся из прерывания
 
-
+; Обработчик прерывания для таймера 2
 ISR_TIMER2:
-    push r24
-    push r25
-    push ZH
-    push ZL
-    ldi r24, high(msg_pong*2)
-    ldi r25, low(msg_pong*2)
-    mov ZH, r24
-    mov ZL, r25
-    rcall send_text_string
-    pop ZL
-    pop ZH
-    pop r25
-    pop r24
-    reti
+    push r24             ; Сохраняем состояние регистра r24
+    push r25             ; Сохраняем состояние регистра r25
+    push ZH              ; Сохраняем состояние старшего байта регистра Z
+    push ZL              ; Сохраняем состояние младшего байта регистра Z
+    ldi r24, high(msg_pong*2)  ; Загружаем старший байт адреса строки msg_pong
+    ldi r25, low(msg_pong*2)   ; Загружаем младший байт адреса строки msg_pong
+    mov ZH, r24          ; Переносим старший байт адреса в регистр ZH
+    mov ZL, r25          ; Переносим младший байт адреса в регистр ZL
+    rcall send_text_string  ; Вызываем функцию для отправки строки
+    pop ZL               ; Восстанавливаем старший байт регистра Z
+    pop ZH               ; Восстанавливаем младший байт регистра Z
+    pop r25              ; Восстанавливаем регистр r25
+    pop r24              ; Восстанавливаем регистр r24
+    reti                 ; Возвращаемся из прерывания
